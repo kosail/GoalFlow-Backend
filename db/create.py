@@ -4,8 +4,8 @@ import sqlite3
 # Database initialization for GoalFlow
 # ------------------------------------------------------
 
-def init_db():
-    conn = sqlite3.connect("goalflow.db")
+def create_db():
+    conn = sqlite3.connect("db/goalflow.db")
     cursor = conn.cursor()
 
     # Enable foreign key constraints (disabled by default in SQLite)
@@ -128,4 +128,4 @@ def init_db():
     print("✅ Database initialized successfully (goalflow.db)")
 
 if __name__ == "__main__":
-    init_db()
+    create_db()

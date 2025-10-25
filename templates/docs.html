@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GoalFlow API Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #1e293b;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100vh;
+      background-color: #f8fafc;
+      border-right: 1px solid #e2e8f0;
+      padding: 1.5rem;
+    }
+    .sidebar h2 {
+      color: #2563eb;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .sidebar a {
+      display: block;
+      color: #334155;
+      padding: 0.5rem 0;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    .sidebar a:hover {
+      color: #2563eb;
+    }
+    .content {
+      margin-left: 280px;
+      padding: 2rem;
+      max-width: 900px;
+    }
+    h1 {
+      color: #2563eb;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      color: #1e40af;
+      font-weight: 600;
+      margin-top: 2rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.3rem;
+    }
+    h3 {
+      color: #334155;
+      font-weight: 600;
+      margin-top: 1.2rem;
+    }
+    pre {
+      background-color: #f1f5f9;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
+      font-size: 0.9rem;
+    }
+    code {
+      background-color: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-family: monospace;
+      color: #0f172a;
+      font-size: 0.9rem;
+    }
+    .method {
+      font-weight: 700;
+      border-radius: 0.25rem;
+      padding: 0.15rem 0.5rem;
+      color: white;
+      font-size: 0.85rem;
+      margin-right: 0.5rem;
+    }
+    .GET { background-color: #22c55e; }     /* Green */
+    .POST { background-color: #3b82f6; }    /* Blue */
+    .PATCH { background-color: #f59e0b; }   /* Orange */
+    .DELETE { background-color: #ef4444; }  /* Red */
+    .section {
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <h2>GoalFlow Docs</h2>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#accounts">Accounts</a>
+      <a href="#transactions">Transactions</a>
+      <a href="#goals">Goals</a>
+      <a href="#missions">Missions</a>
+      <a href="#testing">Testing</a>
+    </nav>
+  </div>
+
+  <div class="content">
+    <h1 id="overview">GoalFlow API Documentation</h1>
+    <p>This document describes the REST API for the <strong>GoalFlow Backend</strong>, which manages user accounts, financial transactions, goals, and missions using Flask and SQLite.</p>
+
+    <h2>Base URL</h2>
+    <pre><code>http://127.0.0.1:5000/</code></pre>
+
+    <!-- ACCOUNTS -->
+    <div class="section" id="accounts">
+      <h2>Accounts</h2>
+
+      <h3><span class="method GET">GET</span> /accounts</h3>
+      <p>Returns all user accounts.</p>
+
+      <h3><span class="method GET">GET</span> /accounts/&lt;id&gt;</h3>
+      <p>Retrieve details for a specific account.</p>
+
+      <h3><span class="method POST">POST</span> /accounts</h3>
+      <p>Create a new account.</p>
+      <pre><code>{
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "phone_number": "5551234567",
+  "email": "jane@example.com",
+  "balance": 100.0
+}</code></pre>
+
+      <h3><span class="method PATCH">PATCH</span> /accounts/&lt;id&gt;</h3>
+      <p>Update account fields such as balance or contact info.</p>
+
+      <h3><span class="method DELETE">DELETE</span> /accounts/&lt;id&gt;</h3>
+      <p>Delete an account.</p>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="section" id="transactions">
+      <h2>Transactions</h2>
+
+      <h3><span class="method GET">GET</span> /transactions/&lt;account_id&gt;</h3>
+      <p>Retrieve all transactions related to an account.</p>
+
+      <h3><span class="method POST">POST</span> /transactions</h3>
+      <p>Create a new transaction.</p>
+      <pre><code>{
+  "origin_account": 1,
+  "destination_account": 2,
+  "amount": 50.0,
+  "business_type": "TRANSFER"
+}</code></pre>
+
+      <h3><span class="method DELETE">DELETE</span> /transactions/&lt;id&gt;</h3>
+      <p>Delete a transaction.</p>
+    </div>
+
+    <!-- GOALS -->
+    <div class="section" id="goals">
+      <h2>Goals</h2>
+
+      <h3><span class="method GET">GET</span> /goals/&lt;user_id&gt;</h3>
+      <p>Retrieve all goals for a given user.</p>
+
+      <h3><span class="method POST">POST</span> /goals</h3>
+      <p>Create a new goal.</p>
+      <pre><code>{
+  "UserId": 1,
+  "GoalName": "New Car",
+  "TargetAmount": 5000
+}</code></pre>
+
+      <h3><span class="method PATCH">PATCH</span> /goals/&lt;goal_id&gt;</h3>
+      <p>Update progress (CurrentAmount) of a goal.</p>
+
+      <h3><span class="method DELETE">DELETE</span> /goals/&lt;goal_id&gt;</h3>
+      <p>Delete a goal.</p>
+    </div>
+
+    <!-- MISSIONS -->
+    <div class="section" id="missions">
+      <h2>Missions</h2>
+
+      <h3><span class="method GET">GET</span> /missions/&lt;user_id&gt;</h3>
+      <p>Retrieve all missions for a user.</p>
+
+      <h3><span class="method POST">POST</span> /missions</h3>
+      <p>Create a new mission.</p>
+
+      <h3><span class="method PATCH">PATCH</span> /missions/&lt;mission_id&gt;</h3>
+      <p>Update mission progress or mark as completed.</p>
+
+      <h3><span class="method DELETE">DELETE</span> /missions/&lt;mission_id&gt;</h3>
+      <p>Delete a mission.</p>
+    </div>
+
+    <!-- TESTING -->
+    <div class="section" id="testing">
+      <h2>Testing</h2>
+      <p>Run all endpoint tests:</p>
+      <pre><code>python tests/endpoints.py</code></pre>
+    </div>
+  </div>
+</body>
+</html>
