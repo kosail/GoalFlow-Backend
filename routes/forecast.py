@@ -1,108 +1,86 @@
-from flask import Blueprint, jsonify
-import sqlite3
-import pandas as pd
-from prophet import Prophet
+from flask import Blueprint, jsonify, request
+from datetime import date, timedelta
 
-PERIODS = 24 # 12 - 3 months | 24 - 6 months
-CD_RATE = 0.035
+forecast_bp = Blueprint("forecast", __name__)
 
-forecast_bp = Blueprint("analyse", __name__)
+def generate_sample_forecast(
+    start_date: date,
+    days: int,
+    initial_balance: float,
+    baseline_daily_delta: float = 10.0,  # average daily net change
+    cd_apy: float = 0.035,               # 3.5% APY
+    ai_delta: float = 0.10,              # +10% improved spending/savings
+):
+    """
+    Generates simulated forecast data for baseline, CD, AI, and combined scenarios.
+    """
+    if days <= 0:
+        raise ValueError("days must be positive")
 
-DB_PATH = "db/goalflow.db"
+    # Precompute date strings
+    dates = [(start_date + timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(days)]
 
-def get_weekly_balance(account_id):
-    with sqlite3.connect(DB_PATH) as conn:
-        query = """
-        SELECT 
-            strftime('%Y-%W', datetime) AS week,
-            SUM(
-                CASE 
-                    WHEN origin_account = ? THEN -amount
-                    WHEN destination_account = ? THEN amount
-                    ELSE 0
-                END
-            ) AS net_flow
-        FROM Transactions
-        WHERE origin_account = ? OR destination_account = ?
-        GROUP BY week
-        ORDER BY week;
-        """
-        df = pd.read_sql_query(query, conn, params=(account_id, account_id, account_id, account_id))
-    return df
+    daily_rate = cd_apy / 365.0
+    baseline, cd, ai, combined = [], [], [], []
 
+    b_prev = c_prev = a_prev = combo_prev = initial_balance
 
-@forecast_bp.route("/forecast/<int:account_id>", methods=["GET"])
-def predict_balance(account_id):
-    df = get_weekly_balance(account_id)
-    if df.empty:
-        return jsonify({"error": "Not enough transaction data"}), 400
+    for _ in range(days):
+        # Baseline: linear change
+        b_next = b_prev + baseline_daily_delta
 
-    # Prophet requires 'ds' and 'y'
-    df = df.rename(columns={"week": "ds", "net_flow": "y"})
-    df["ds"] = pd.to_datetime(df["ds"] + "-1", format="%Y-%W-%w")
+        # CD: compound interest + same delta
+        c_next = c_prev * (1.0 + daily_rate) + baseline_daily_delta
 
-    try:
-        model = Prophet()
-        model.fit(df)
+        # AI: improved daily delta (e.g. +10%)
+        ai_next = a_prev + baseline_daily_delta * (1.0 + ai_delta)
 
-        # Forecast 12 weeks ahead
-        future = model.make_future_dataframe(periods=PERIODS, freq="W")
-        forecast = model.predict(future)
-        forecast["week"] = forecast["ds"].dt.strftime("%Y-%W")
+        # Combined: interest + improved delta
+        combo_next = combo_prev * (1.0 + daily_rate) + baseline_daily_delta * (1.0 + ai_delta)
 
-        baseline = forecast["yhat"].tolist()
+        baseline.append(round(b_next, 2))
+        cd.append(round(c_next, 2))
+        ai.append(round(ai_next, 2))
+        combined.append(round(combo_next, 2))
 
-        # --- Scenario 1: CapitalOne 360 CD Rate (3.5% APY)
-  
-        capitalone_cd = [
-            round(value * ((1 + CD_RATE / 52) ** i), 2)
-            for i, value in enumerate(baseline)
-        ]
+        b_prev, c_prev, a_prev, combo_prev = b_next, c_next, ai_next, combo_next
 
-        # --- Scenario 2: AI-Optimized Spending (-10% avg expenses)
-        ai_spending_factor = 1.05  # small overall improvement
-        ai_optimized = [
-            round(value * ai_spending_factor, 2) for value in baseline
-        ]
-
-        # --- Scenario 3: Combined Strategy
-        combined = [
-            round(value * ((1 + CD_RATE / 52) ** i) * ai_spending_factor, 2)
-            for i, value in enumerate(baseline)
-        ]
-
-        # Build unified response
-        result = {
-            "account_id": account_id,
-            "scenarios": {
-                "Baseline Trend": [
-                    {
-                        "balances": [round(b, 2) for b in baseline],
-                        "weeks": forecast["week"].tolist()
-                    }
-                ],
-                "CapitalOne 360 CD": [
-                    {
-                        "balances": capitalone_cd,
-                        "weeks": forecast["week"].tolist()
-                    }
-                ],
-                "AI-Optimized Spending": [
-                    {
-                        "balances": ai_optimized,
-                        "weeks": forecast["week"].tolist()
-                    }
-                ],
-                "Combined Strategy": [
-                    {
-                        "balances": combined,
-                        "weeks": forecast["week"].tolist()
-                    }
-                ]
-            }
+    return {
+        "dates": dates,
+        "scenarios": {
+            "baseline": baseline,
+            "cd_3_5": cd,
+            "ai_goals": ai,
+            "combined": combined
         }
+    }
 
-        return jsonify(result), 200
+
+@forecast_bp.route("/<int:account_id>", methods=["GET"])
+def forecast(account_id: int):
+    """
+    Returns sample forecast data for a user's account.
+    Optional query params:
+      - days (int): number of forecast days (default=30)
+      - initial_balance (float): starting balance (default=5000)
+      - cd_apy (float): CD annual interest rate (default=0.035)
+      - ai_delta (float): AI daily improvement multiplier (default=0.10)
+    """
+    try:
+        days = int(request.args.get("days", 30))
+        initial_balance = float(request.args.get("initial_balance", 5000))
+        cd_apy = float(request.args.get("cd_apy", 0.035))
+        ai_delta = float(request.args.get("ai_delta", 0.10))
+
+        result = generate_sample_forecast(
+            start_date=date.today(),
+            days=days,
+            initial_balance=initial_balance,
+            cd_apy=cd_apy,
+            ai_delta=ai_delta
+        )
+        result["account_id"] = account_id
+        return jsonify(result)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 400
