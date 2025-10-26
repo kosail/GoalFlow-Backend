@@ -12,6 +12,13 @@ def get_goals():
         rows = conn.execute("SELECT * FROM Goals").fetchall()
     return jsonify([dict(row) for row in rows])
 
+@goals_bp.route('/account/<int:account_id>', methods=['GET'])
+def get_account_goals(account_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory  = sqlite3.Row
+        rows = conn.execute("SELECT * FROM Goals WHERE UserId = ?", (account_id,)).fetchall()
+    return jsonify([dict(row) for row in rows])
+
 @goals_bp.route('/<int:goal_id>', methods=['GET'])
 def get_goal(goal_id):
     with sqlite3.connect(DB_PATH) as conn:

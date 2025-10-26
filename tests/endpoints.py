@@ -84,28 +84,42 @@ class TestAPI(unittest.TestCase):
 
     # --- GOALS ---
     def test_goals(self):
+        # Get an existing account ID
         accounts = requests.get(f"{BASE}/accounts/").json()
         acc_id = accounts[0]['id']
 
+        # Create a new goal (includes new Category field)
         r = requests.post(f"{BASE}/goals/", json={
             "UserId": acc_id,
             "GoalName": "Save for laptop",
             "Description": "Purchase a new laptop",
+            "Category": "Technology",
             "TargetAmount": 1500,
             "CurrentAmount": 300,
             "Deadline": "2026-01-01"
         })
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(r.status_code, 201, f"Goal creation failed: {r.text}")
 
+        # Get all goals
         r = requests.get(f"{BASE}/goals/")
-        self.assertEqual(r.status_code, 200)
-        goal_id = r.json()[-1]['GoalId']
+        self.assertEqual(r.status_code, 200, f"Fetching all goals failed: {r.text}")
+        goals = r.json()
+        self.assertTrue(len(goals) > 0)
+        goal_id = goals[-1]['GoalId']
 
+        # Get all goals for the specific account (new endpoint)
+        r = requests.get(f"{BASE}/goals/account/{acc_id}")
+        self.assertEqual(r.status_code, 200, f"Fetching goals by account failed: {r.text}")
+        acc_goals = r.json()
+        self.assertTrue(any(g['UserId'] == acc_id for g in acc_goals), "No goals found for this account")
+
+        # Update goal progress
         r = requests.patch(f"{BASE}/goals/{goal_id}", json={"CurrentAmount": 500})
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 200, f"Goal update failed: {r.text}")
 
+        # Delete goal
         r = requests.delete(f"{BASE}/goals/{goal_id}")
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 200, f"Goal deletion failed: {r.text}")
 
     # --- MISSIONS ---
     def test_missions(self):

@@ -12,7 +12,7 @@ def create_db():
     cursor.execute("PRAGMA foreign_keys = ON;")
 
     # ------------------------------------------------------
-    # Table: Accounts / Cuentas
+    # Table: Accounts
     # ------------------------------------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Accounts (
@@ -28,7 +28,7 @@ def create_db():
     """)
 
     # ------------------------------------------------------
-    # Table: Transactions / Transacciones
+    # Table: Transactions
     # ------------------------------------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Transactions (
@@ -44,7 +44,7 @@ def create_db():
     """)
 
     # ------------------------------------------------------
-    # Table: Goals / Metas
+    # Table: Goals
     # ------------------------------------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Goals (
@@ -53,18 +53,18 @@ def create_db():
 
         GoalName TEXT NOT NULL,
         Description TEXT,
+        Category TEXT,
 
         TargetAmount REAL NOT NULL,
         CurrentAmount REAL DEFAULT 0.0,
 
         CreatedAt TEXT DEFAULT (datetime('now')),
-        Deadline TEXT,
-        IsCompleted INTEGER DEFAULT 0
+        Deadline TEXT                   
     );
     """)
 
     # ------------------------------------------------------
-    # Table: Transacciones relativas a una meta
+    # Table: Transactions relative to a Goal
     # ------------------------------------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS GoalTransactions (
@@ -81,7 +81,7 @@ def create_db():
     """)
 
     # ------------------------------------------------------
-    # Table: templates para las misiones semanales
+    # Table: Templates for weekly missions
     # ------------------------------------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS MissionTemplates (
@@ -101,7 +101,7 @@ def create_db():
     """)
 
     # ------------------------------------------------------
-    # Table: Misiones semanales
+    # Table: Weekly missions
     # ------------------------------------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS WeeklyMissions (
@@ -125,7 +125,7 @@ def create_db():
 
     conn.commit()
     conn.close()
-    print("✅ Database initialized successfully (goalflow.db)")
+    print("Database initialized successfully (goalflow.db)")
 
 if __name__ == "__main__":
     create_db()

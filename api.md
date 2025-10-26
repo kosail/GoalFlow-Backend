@@ -175,6 +175,10 @@ Delete a transaction.
 
 Retrieve all goals.
 
+### `GET /goals/account/<account_id>`
+
+Retrieve all goals of an account by AccountId.
+
 ### `GET /goals/<id>`
 
 Retrieve a specific goal by ID.
