@@ -19,6 +19,17 @@ def get_all_transactions():
         rows = conn.execute("SELECT * FROM Transactions ORDER BY datetime DESC").fetchall()
     return jsonify([dict(row) for row in rows])
 
+@transactions_bp.route('/account/<int:account_id>', methods=['GET'])
+def get_account_transactions(account_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory  = sqlite3.Row
+        rows = conn.execute("""SELECT * FROM Transactions 
+                            WHERE destination_account = ?""", (account_id,)).fetchall()
+        rows2 = conn.execute("""SELECT * FROM Transactions 
+                            WHERE origin_account = ?""", (account_id,)).fetchall()
+        rows = rows + rows2
+    return jsonify([dict(row) for row in rows])
+
 @transactions_bp.route('/<int:transaction_id>', methods=['GET'])
 def get_transaction(transaction_id):
     with sqlite3.connect(DB_PATH) as conn:
